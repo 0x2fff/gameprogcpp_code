@@ -74,6 +74,29 @@ void Shader::SetMatrixUniform(const char* name, const Matrix4& matrix)
 	GLuint loc = glGetUniformLocation(mShaderProgram, name);
 	// Send the matrix data to the uniform
 	glUniformMatrix4fv(loc, 1, GL_TRUE, matrix.GetAsFloatPtr());
+
+
+	/* テクスチャの読み込みに使う配列 */
+
+	static SDL_Surface* surface = nullptr;
+	SDL_FreeSurface(surface);
+	surface = SDL_LoadBMP("texture.bmp");
+	if (!surface) return;
+	/* テクスチャ画像はバイト単位に詰め込まれている */
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	/* テクスチャの割り当て */
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0,
+		GL_RGB, GL_UNSIGNED_BYTE, surface->pixels);
+
+	GLuint loc2 = glGetUniformLocation(mShaderProgram, "uTexture");
+	glUniform1i(loc, 0);
 }
 
 bool Shader::CompileShader(const std::string& fileName,
